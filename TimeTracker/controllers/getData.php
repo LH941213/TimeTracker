@@ -28,12 +28,20 @@ switch ($group) {
         $selectLabel = "Category AS Label";
         break;
 }
-
-$sql = "SELECT $selectLabel, SUM(DATEDIFF(minute, StartTime, EndTime))/60.0 AS TotalHours
-        FROM TimeLogs
-        WHERE StartTime BETWEEN :start AND :end
-        GROUP BY $groupExpr
-        ORDER BY $groupExpr";
+// 修改SQL查询，在按时间分组时也包含类别信息
+if ($group && $group !== '') {
+    $sql = "SELECT $selectLabel, Category, SUM(DATEDIFF(minute, StartTime, EndTime))/60.0 AS TotalHours
+            FROM TimeLogs
+            WHERE StartTime BETWEEN :start AND :end
+            GROUP BY $groupExpr, Category
+            ORDER BY $groupExpr, Category";
+} else {
+    $sql = "SELECT $selectLabel, SUM(DATEDIFF(minute, StartTime, EndTime))/60.0 AS TotalHours
+            FROM TimeLogs
+            WHERE StartTime BETWEEN :start AND :end
+            GROUP BY $groupExpr
+            ORDER BY $groupExpr";
+}
 $stmt = $pdo->prepare($sql);
 $stmt->execute(["start" => $start, "end" => $end]);
 $data = $stmt->fetchAll(PDO::FETCH_ASSOC);

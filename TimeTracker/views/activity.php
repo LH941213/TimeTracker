@@ -15,6 +15,7 @@
             <option value="学习">学习</option>
             <option value="工作">工作</option>
             <option value="休闲">休闲</option>
+            <option value="运动">运动</option>
         </select><br>
         开始时间: <input type="datetime-local" name="start_time" required><br>
         结束时间: <input type="datetime-local" name="end_time"><br>

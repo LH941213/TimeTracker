@@ -78,14 +78,57 @@ function updateChart() {
             // 确保 chart 实例已经存在才进行更新
             if (chart) {
                  // 清空旧数据
-                chart.data.labels.length = 0;
-                chart.data.datasets[0].data.length = 0;
-                chart.data.datasets[0].backgroundColor.length = 0;
-
-                chart.data.labels.push(...data.map(d => d.Label));
-                chart.data.datasets[0].data.push(...data.map(d => Number(d.TotalHours)));
-                chart.data.datasets[0].backgroundColor.push(...data.map(_ => "rgba(54, 162, 235, 0.8)"));
-                chart.update(); // 更新图表数据
+                chart.data.labels = [];
+                chart.data.datasets = [];
+                // 按分组类型处理数据
+                if (groupType && groupType !== '') {
+                    // 时间分组模式 - 使用分组柱状图
+                    const timeGroups = [...new Set(data.map(d => d.Label))];
+                    const categories = [...new Set(data.map(d => d.Category))];
+                    
+                    // 为每个类别创建一个数据集
+                categories.forEach(category => {
+                        const categoryData = timeGroups.map(time => {
+                            const item = data.find(d => d.Label === time && d.Category === category);
+                            return item ? Number(item.TotalHours) : 0;
+                        });
+                        
+                        chart.data.datasets.push({
+                            label: category,
+                            data: categoryData,
+                            backgroundColor: categoryColors[category] || "gray",
+                            borderColor: 'black',
+                            borderWidth: 1
+                        });
+                    });
+                    
+                    chart.data.labels = timeGroups;
+                } else {
+                    // 默认模式 - 按类别分组
+                    chart.data.labels = data.map(d => d.Label);
+                    chart.data.datasets = [{
+                        label: '活动时长 (小时)',
+                        data: data.map(d => Number(d.TotalHours)),
+                        backgroundColor: data.map(d => categoryColors[d.Label] || "gray"),
+                        borderColor: 'black',
+                        borderWidth: 1
+                    }];
+                }
+                
+                // 更新图表配置
+                chart.options.scales.x = {
+                    stacked: groupType && groupType !== '',
+                };
+                chart.options.scales.y = {
+                    beginAtZero: true,
+                    stacked: groupType && groupType !== '',
+                };
+                chart.options.plugins.legend = {
+                    display: groupType && groupType !== '',
+                };
+                
+                chart.update();
+                
             } else {
                 console.error("在调用 updateChart 时，图表实例未初始化。");
             }
